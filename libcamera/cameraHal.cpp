@@ -15,6 +15,11 @@
  */
 
 #define LOG_TAG "CameraHAL"
+#define LOGV
+#define LOGE
+#define LOGD
+#define LOGW
+#define LOGI
 
 #include <CameraHardwareInterface.h>
 #include <hardware/hardware.h>

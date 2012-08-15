@@ -24,6 +24,11 @@
 */
 
 //#define LOG_NDEBUG 0
+#define LOGV
+#define LOGE
+#define LOGD
+#define LOGW
+#define LOGI
 #define LOG_NIDEBUG 0
 #define LOG_TAG "QualcommCameraHardware"
 #include <utils/Log.h>
