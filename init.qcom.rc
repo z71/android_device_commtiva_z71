@@ -1,3 +1,14 @@
+import init.usb.rc
+
+on early-init
+mkdir /storage 0775 system sdcard_r
+    mkdir /storage/sdcard0 0000 system system
+    export EXTERNAL_STORAGE /storage/sdcard0
+    # for backwards compatibility
+    symlink /storage/sdcard0 /mnt/sdcard
+    symlink /storage/sdcard0 /sdcard
+    start hwprops
+
 on fs
 
     mkdir /misc
@@ -22,9 +33,6 @@ on fs
     copy /system/etc/ms3c_charger_offset.cfg /misc/ms3c/charger_offset.cf
     chown system system /misc/ms3c/transformation.cf
     chown system system /misc/ms3c/charger_offset.cf
-
-on early-init
-    start hwprops
 
 on property:dev.bootcomplete=1
 #+++FIH_misty enable keypad interrupt until boot complete

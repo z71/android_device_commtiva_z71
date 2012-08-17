@@ -43,12 +43,13 @@ struct str_map {
     int val;
 };
 
-typedef enum {
+typedef enum{
+    TARGET_MSM7227,
     TARGET_MSM7625,
     TARGET_MSM7627,
     TARGET_QSD8250,
     TARGET_MSM7630,
-    TARGET_MAX
+    TARGET_MAX,
 }targetType;
 
 struct target_map {
@@ -198,7 +199,7 @@ struct fifo_node {
 void enqueue(struct fifo_queue *queue, struct fifo_node *node) {
 	struct fifo_node *cur_node=queue->node;
 	int i;
-	LOGE("enqueue:%p(%d)\n", node, queue->num_of_frames);
+	ALOGE("enqueue:%p(%d)\n", node, queue->num_of_frames);
 	node->next=NULL;
 	if(queue->num_of_frames==0) {
 		queue->num_of_frames++;
@@ -219,7 +220,7 @@ struct fifo_node *dequeue(struct fifo_queue *queue) {
 	if(queue->num_of_frames==0)
 		return NULL;
 	struct fifo_node *node=queue->node;
-	LOGE("dequeue:%p(%d)\n", node, queue->num_of_frames);
+	ALOGE("dequeue:%p(%d)\n", node, queue->num_of_frames);
 	queue->num_of_frames--;
 	queue->front=!!queue->num_of_frames;
 	queue->node=queue->node->next;
@@ -611,6 +612,7 @@ private:
     pthread_t mFrameThread;
     pthread_t mVideoThread;
     pthread_t mSnapshotThread;
+    pthread_t mCamConfigThread;
 
     common_crop_t mCrop;
 
@@ -637,3 +639,4 @@ private:
 }; // namespace android
 
 #endif
+

@@ -23,8 +23,8 @@ PRODUCT_AAPT_PREF_CONFIG := mdpi
 ## Graphics
 PRODUCT_PACKAGES := \
         gralloc.msm7x27 \
-        copybit.msm7x27 \
-        hwcomposer.msm7x27
+        copybit.z71 \
+        libQcomUI
 
 # OMX
 PRODUCT_PACKAGES += \
@@ -34,13 +34,13 @@ PRODUCT_PACKAGES += \
 
 # Camera
 PRODUCT_PACKAGES += \
+        libcamera \
         camera.msm7x27
 
 # GPS
 PRODUCT_PACKAGES += \
-        librpc \
-        gps.z71
-
+        librpc 
+        
 # Z71 specific
 PRODUCT_PACKAGES += \
         lights.z71 \
@@ -114,13 +114,11 @@ PRODUCT_COPY_FILES += \
     device/commtiva/z71/dhcpcd.conf:system/etc/dhcpcd/dhcpcd.conf \
     device/commtiva/z71/vold.fstab:system/etc/vold.fstab \
     device/commtiva/z71/wpa_supplicant.conf:system/etc/wifi/wpa_supplicant.conf \
-    device/commtiva/z71/bi8232-ics.idc:system/usr/idc/bi8232-ics.idc \
+    device/commtiva/z71/prebuilt/bi8232-keypad.idc:system/usr/idc/bi8232-keypad.idc \
     device/commtiva/z71/7x27_kybd.kl:system/usr/keylayout/7x27_kybd.kl \
     device/commtiva/z71/prebuilt/bi8232-keypad.kl:system/usr/keylayout/bi8232-keypad.kl
 
 $(call inherit-product, $(SRC_TARGET_DIR)/product/languages_full.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base.mk)
 $(call inherit-product, device/common/gps/gps_eu_supl.mk)
-
-$(call inherit-product, frameworks/native/build/phone-hdpi-512-dalvik-heap.mk)
 $(call inherit-product-if-exists, vendor/commtiva/z71/z71-vendor.mk)

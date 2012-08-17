@@ -12,15 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#LOCAL_MODULE_TAGS := optional
-#include $(call all-named-subdir-makefiles, recovery  boot  libsensors  liblights)
+LOCAL_PATH := $(call my-dir)
 
-LOCAL_MODULE_TAGS := optional
-
-LOCAL_PATH := $(my-dir)
-subdir_makefiles := \
-        $(LOCAL_PATH)/libaudio/Android.mk \
-	$(LOCAL_PATH)/liblights/Android.mk \
-        $(LOCAL_PATH)/libcamera/Android.mk 
-
-include $(subdir_makefiles)
+ifeq ($(TARGET_BOOTLOADER_BOARD_NAME),z71)
+include $(call all-makefiles-under,$(LOCAL_PATH))
+endif
