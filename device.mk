@@ -17,8 +17,7 @@
 $(call inherit-product, device/common/gps/gps_eu_supl.mk)
 DEVICE_PACKAGE_OVERLAYS += device/commtiva/z71/overlay
 
-PRODUCT_AAPT_CONFIG := normal mdpi
-PRODUCT_AAPT_PREF_CONFIG := mdpi
+PRODUCT_LOCALES += mdpi
 
 ## Graphics
 PRODUCT_PACKAGES := \
@@ -30,7 +29,8 @@ PRODUCT_PACKAGES := \
 PRODUCT_PACKAGES += \
         libmm-omxcore \
         libOmxCore \
-        libstagefrighthw
+        libstagefrighthw \
+        libopencorehw
 
 # Camera
 PRODUCT_PACKAGES += \
@@ -39,6 +39,7 @@ PRODUCT_PACKAGES += \
 
 # GPS
 PRODUCT_PACKAGES += \
+        gps.z71 \
         librpc 
         
 # Z71 specific
@@ -80,6 +81,7 @@ PRODUCT_TAGS += dalvik.gc.type-precise
 # Board-specific init
 PRODUCT_COPY_FILES += \
     device/commtiva/z71/ueventd.qct.rc:root/ueventd.qct.rc \
+    device/commtiva/z71/init.usb.rc:root/init.usb.rc \
     device/commtiva/z71/init.qcom.rc:root/init.qcom.rc
 
 ## Hardware properties 

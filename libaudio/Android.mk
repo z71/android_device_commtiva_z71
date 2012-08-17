@@ -1,4 +1,7 @@
 LOCAL_PATH:= $(call my-dir)
+
+ifeq ($(TARGET_BOOTLOADER_BOARD_NAME),z71)
+
 include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES:=               \
