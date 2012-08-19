@@ -35,7 +35,7 @@ persist.service.adb.enable=1
 
 dalvik.vm.dexopt-data-only=1
 dalvik.vm.execution-mode=int:jit
-dalvik.vm.heapsize=32m
+dalvik.vm.heapsize=48m
 
 com.qc.hardware=true
 ro.telephony.call_ring.delay=3000

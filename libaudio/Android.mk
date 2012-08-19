@@ -56,3 +56,4 @@ LOCAL_CFLAGS += -fno-short-enums
 #endif
 
 include $(BUILD_SHARED_LIBRARY)
+endif

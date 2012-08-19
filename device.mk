@@ -54,13 +54,6 @@ PRODUCT_PACKAGES += \
         audio.a2dp.default \
         libaudioutils
 
-# Live Wallpapers
-PRODUCT_PACKAGES += \
-        LiveWallpapers \
-        LiveWallpapersPicker \
-        VisualizationWallpapers \
-        librs_jni
-
 # Other
 PRODUCT_PACKAGES += \
         dexpreopt
@@ -116,9 +109,9 @@ PRODUCT_COPY_FILES += \
     device/commtiva/z71/dhcpcd.conf:system/etc/dhcpcd/dhcpcd.conf \
     device/commtiva/z71/vold.fstab:system/etc/vold.fstab \
     device/commtiva/z71/wpa_supplicant.conf:system/etc/wifi/wpa_supplicant.conf \
-    device/commtiva/z71/prebuilt/bi8232-keypad.idc:system/usr/idc/bi8232-keypad.idc \
+    device/commtiva/z71/prebuilt/bi8232-jb.idc:system/usr/idc/bi8232-jb.idc \
     device/commtiva/z71/7x27_kybd.kl:system/usr/keylayout/7x27_kybd.kl \
-    device/commtiva/z71/prebuilt/bi8232-keypad.kl:system/usr/keylayout/bi8232-keypad.kl
+    device/commtiva/z71/prebuilt/bi8232-jb.kl:system/usr/keylayout/bi8232-jb.kl
 
 $(call inherit-product, $(SRC_TARGET_DIR)/product/languages_full.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base.mk)
