@@ -19,18 +19,24 @@ DEVICE_PACKAGE_OVERLAYS += device/commtiva/z71/overlay
 
 PRODUCT_LOCALES += mdpi
 
-## Graphics
-PRODUCT_PACKAGES := \
-        gralloc.msm7x27 \
-        copybit.z71 \
-        libQcomUI
-
-# OMX
+# Display
 PRODUCT_PACKAGES += \
-        libmm-omxcore \
-        libOmxCore \
-        libstagefrighthw \
-        libopencorehw
+    libgenlock \
+    libmemalloc \
+    liboverlay \
+    libqdutils \
+    libtilerenderer \
+    libopencorehw \
+    gralloc.msm7x27 \
+    copybit.msm7x27 \
+    hwcomposer.msm7x27
+        
+# OMX
+#PRODUCT_PACKAGES += \
+#        libmm-omxcore \
+#        libOmxCore \
+#        libstagefrighthw 
+
 
 # Camera
 PRODUCT_PACKAGES += \
@@ -44,13 +50,13 @@ PRODUCT_PACKAGES += \
         
 # Z71 specific
 PRODUCT_PACKAGES += \
-        lights.z71 \
+        lights.msm7x27 \
         sensors.z71 
 
 # Audio
 PRODUCT_PACKAGES += \
-        audio.primary.z71 \
-        audio_policy.z71 \
+        audio.primary.msm7x27 \
+        audio_policy.msm7x27 \
         audio.a2dp.default \
         libaudioutils
 

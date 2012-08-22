@@ -1,0 +1,43 @@
+# Video editor (5MB)
+app/VideoEditor.apk
+lib/libvideoeditor_jni.so
+lib/libvideoeditorplayer.so
+
+# RomManager (2.5MB)
+app/RomManager.apk
+
+# CM Wallpapers (7MB)
+app/CMWallpapers.apk
+
+# LiveWallpapers (1MB)
+app/Galaxy4.apk
+
+# Boot animation: 2MB
+media/bootanimation.zip
+
+# tts/lang_pico (4MB)
+tts/lang_pico/en-GB_kh0_sg.bin
+tts/lang_pico/en-US_lh0_sg.bin
+tts/lang_pico/en-GB_ta.bin
+tts/lang_pico/en-US_ta.bin
+
+# Ringtones > 100KB, Total: 4MB
+media/audio/ringtones/Silmarillia.ogg
+media/audio/ringtones/Gigolo.ogg
+media/audio/ringtones/House_of_house.ogg
+media/audio/ringtones/Boxbeat.ogg
+
+# from AudioPackageNewWave
+media/audio/ringtones/LoopyLounge.ogg
+media/audio/ringtones/LoveFlute.ogg
+media/audio/ringtones/MidEvilJaunt.ogg
+media/audio/ringtones/MildlyAlarming.ogg
+media/audio/ringtones/VeryAlarmed.ogg
+media/audio/ringtones/World.ogg
+media/audio/notifications/DearDeer.ogg
+media/audio/notifications/DontPanic.ogg
+media/audio/notifications/Highwire.ogg
+media/audio/ringtones/CrazyDream.ogg
+media/audio/ringtones/DreamTheme.ogg
+media/audio/ringtones/Seville.ogg
+media/audio/ringtones/Safari.ogg
