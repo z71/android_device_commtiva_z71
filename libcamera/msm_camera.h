@@ -15,21 +15,6 @@
  * 02110-1301, USA.
  *
  */
-/*-----------------------------------------------------------------------------------------
-  when         who      what, where, why                   comment tag
-  ----------   ----     ---------------------------------  ------------------------
- 2011-05-19   lijing   add two camera support             ZTE_CAM_LJ_20110519
- 2011-02-21   wt       add flash ioctl id                 ZTE_CAM_WT_20110221 
- 2010-12-15   lijing   add Touch AF and AntiShake         ZTE_CAM_LJ_20101214
-                        function
-  2010-10-26   zt       add the interface of exposure      ZTE_ZT_CAM_20101026_04
-                        compensation for foryo
-  2010-08-20   jia      remove additional CFG_MAX          ZTE_MSM_CAMERA_JIA_001
-  2010-03-03   zh.shj   add config for lens shading        ZTE_MSM_CAMERA_ZHSHJ_001
-  2010-02-21   zh.shj   add levels for sharpness values    ZTE_MSM_CAMERA_ZHSHJ_001
-  2010-02-04   zh.shj   Add parameters for sharpness,WB,   ZTE_MSM_CAMERA_ZHSHJ_001
-                        ISO,Antibanding & brightness setting
-------------------------------------------------------------------------------------------*/
 
 #ifndef __LINUX_MSM_CAMERA_H
 #define __LINUX_MSM_CAMERA_H

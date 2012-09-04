@@ -4,7 +4,7 @@ TARGET_BOOTANIMATION_NAME := vertical-320x480
 $(call inherit-product, device/commtiva/z71/z71.mk)
 
 # Inherit some common CM stuff.
-$(call inherit-product, vendor/cm/config/common_mini_phone.mk)
+$(call inherit-product, vendor/cm/config/common_full_phone.mk)
 
 # Inherit some common CM stuff.
 $(call inherit-product, vendor/cm/config/gsm.mk)

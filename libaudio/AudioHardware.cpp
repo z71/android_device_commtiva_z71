@@ -18,7 +18,7 @@
 #include <math.h>
 
 //#define LOG_NDEBUG 0
-#define LOG_TAG "AudioHardwareMSM72XX"
+#define LOG_TAG "AudioHardware"
 #include <utils/Log.h>
 #include <utils/String8.h>
 
@@ -35,18 +35,13 @@
 #include "AudioHardware.h"
 #include <media/AudioRecord.h>
 
-#define ALOG_SND_RPC 0  // Set to 1 to log sound RPC's
+#define LOG_SND_RPC 0  // Set to 1 to log sound RPC's
 
 #define COMBO_DEVICE_SUPPORTED 0 // Headset speaker combo device not supported on this target
 #define DUALMIC_KEY "dualmic_enabled"
 #define TTY_MODE_KEY "tty_mode"
 
-#ifdef HAVE_FM_RADIO
-#define Si4708_IOC_MAGIC  'k'
-#define Si4708_IOC_SET_VOL                    _IOW(Si4708_IOC_MAGIC, 8,int)
-#endif
-
-namespace android_audio_legacy {
+namespace android_audio_legacy{
 static int audpre_index, tx_iir_index;
 static void * acoustic;
 const uint32_t AudioHardware::inputSamplingRates[] = {
@@ -91,25 +86,27 @@ static int snd_device = -1;
 static uint32_t SND_DEVICE_CURRENT=-1;
 static uint32_t SND_DEVICE_HANDSET=-1;
 static uint32_t SND_DEVICE_SPEAKER=-1;
+static uint32_t SND_DEVICE_FORCE_SPEAKER=-1;
+static uint32_t SND_DEVICE_MEDIA_SPEAKER=-1;
 static uint32_t SND_DEVICE_BT=-1;
-static uint32_t SND_DEVICE_BT_EC_OFF=-1;
+static uint32_t SND_DEVICE_BT_NSEC_OFF=32; // really DEVICE_BT_NSEC_OFF
 static uint32_t SND_DEVICE_HEADSET=-1;
-static uint32_t SND_DEVICE_HEADSET_AND_SPEAKER=-1;
+static uint32_t SND_DEVICE_HEADSET_AND_SPEAKER=26; // really FORCE_SPEAKER
 static uint32_t SND_DEVICE_IN_S_SADC_OUT_HANDSET=-1;
+static uint32_t SND_DEVICE_IN_S_SADC_OUT_HEADSET=-1;
 static uint32_t SND_DEVICE_IN_S_SADC_OUT_SPEAKER_PHONE=-1;
 static uint32_t SND_DEVICE_TTY_HEADSET=-1;
 static uint32_t SND_DEVICE_TTY_HCO=-1;
 static uint32_t SND_DEVICE_TTY_VCO=-1;
 static uint32_t SND_DEVICE_CARKIT=-1;
 static uint32_t SND_DEVICE_FM_SPEAKER=-1;
-static uint32_t SND_DEVICE_FM_HEADSET=-1;
+static uint32_t SND_DEVICE_FM_HEADSET=17; // really IN_S_SADC_OUT_HEADSET
 static uint32_t SND_DEVICE_NO_MIC_HEADSET=-1;
 // ----------------------------------------------------------------------------
 
 AudioHardware::AudioHardware() :
     mInit(false), mMicMute(true), mBluetoothNrec(true), mBluetoothId(0),
-    mOutput(0), mSndEndpoints(NULL), mCurSndDevice(-1), mDualMicEnabled(false), mBuiltinMicSelected(false),
-    mFmRadioEnabled(false),mFmPrev(false),mFmVolume(0),fmfd(-1)
+    mOutput(0), mSndEndpoints(NULL), mCurSndDevice(-1), mDualMicEnabled(false), mBuiltinMicSelected(false)
 {
    if (get_audpp_filter() == 0) {
            audpp_filter_inited = true;
@@ -121,6 +118,8 @@ AudioHardware::AudioHardware() :
         if (rc >= 0) {
             mSndEndpoints = new msm_snd_endpoint[mNumSndEndpoints];
             mInit = true;
+            //Switch to front mic (Samsung hack)
+            ioctl(m7xsnddriverfd, SND_SET_MAIN_MIC);
             ALOGV("constructed (%d SND endpoints)", rc);
             struct msm_snd_endpoint *ept = mSndEndpoints;
             for (int cnt = 0; cnt < mNumSndEndpoints; cnt++, ept++) {
@@ -131,11 +130,14 @@ AudioHardware::AudioHardware() :
                 CHECK_FOR(CURRENT);
                 CHECK_FOR(HANDSET);
                 CHECK_FOR(SPEAKER);
+                CHECK_FOR(MEDIA_SPEAKER);
                 CHECK_FOR(BT);
-                CHECK_FOR(BT_EC_OFF);
+                CHECK_FOR(BT_NSEC_OFF);
                 CHECK_FOR(HEADSET);
                 CHECK_FOR(HEADSET_AND_SPEAKER);
+                CHECK_FOR(NO_MIC_HEADSET);
                 CHECK_FOR(IN_S_SADC_OUT_HANDSET);
+                CHECK_FOR(IN_S_SADC_OUT_HEADSET);
                 CHECK_FOR(IN_S_SADC_OUT_SPEAKER_PHONE);
                 CHECK_FOR(TTY_HEADSET);
                 CHECK_FOR(TTY_HCO);
@@ -145,7 +147,7 @@ AudioHardware::AudioHardware() :
         }
         else ALOGE("Could not retrieve number of MSM SND endpoints.");
 
-        int AUTO_VOLUME_ENABLED = 1; // setting enabled as default
+        int AUTO_VOLUME_ENABLED = 0; // setting enabled as default
 
         static const char *const path = "/system/etc/AutoVolumeControl.txt";
         int txtfd;
@@ -215,14 +217,14 @@ status_t AudioHardware::initCheck()
 }
 
 AudioStreamOut* AudioHardware::openOutputStream(
-        uint32_t devices, int *format, uint32_t *channels, uint32_t *sampleRate, status_t *status)
+        uint32_t devices, audio_output_flags_t flags, int *format, uint32_t *channels, uint32_t *sampleRate, status_t *status)
 {
     { // scope for the lock
         android::Mutex::Autolock lock(mLock);
 
         AudioStreamOutMSM72xx* out;
-        // only one output stream allowed
         if (mOutput) {
+            // only one output stream allowed
             out = mOutput;
         } else {
             // create new output stream
@@ -339,7 +341,7 @@ status_t AudioHardware::getMicMute(bool* state)
 
 status_t AudioHardware::setParameters(const String8& keyValuePairs)
 {
-    android::AudioParameter param = android::AudioParameter(keyValuePairs);
+    AudioParameter param = AudioParameter(keyValuePairs);
     String8 value;
     String8 key;
     const char BT_NREC_KEY[] = "bt_headset_nrec";
@@ -378,18 +380,6 @@ status_t AudioHardware::setParameters(const String8& keyValuePairs)
         }
     }
 
-#ifdef HAVE_FM_RADIO
-    key = String8(android::AudioParameter::keyFmOn);
-    int devices;
-    if (param.getInt(key, devices) == NO_ERROR) {
-       setFmOnOff(true);
-    }
-    key = String8(android::AudioParameter::keyFmOff);
-    if (param.getInt(key, devices) == NO_ERROR) {
-       setFmOnOff(false);
-    }
-#endif
-
     key = String8(DUALMIC_KEY);
     if (param.get(key, value) == NO_ERROR) {
         if (value == "true") {
@@ -414,7 +404,7 @@ status_t AudioHardware::setParameters(const String8& keyValuePairs)
             mTtyMode = TTY_OFF;
         }
     } else {
-	mTtyMode = TTY_OFF;
+        mTtyMode = TTY_OFF;
     }
     doRouting(NULL);
 
@@ -423,7 +413,7 @@ status_t AudioHardware::setParameters(const String8& keyValuePairs)
 
 String8 AudioHardware::getParameters(const String8& keys)
 {
-    android::AudioParameter param = android::AudioParameter(keys);
+    AudioParameter param = AudioParameter(keys);
     String8 value;
 
     String8 key = String8(DUALMIC_KEY);
@@ -1072,7 +1062,7 @@ static status_t set_volume_rpc(uint32_t device,
                                uint32_t volume,
                                int m7xsnddriverfd)
 {
-#if ALOG_SND_RPC
+#if LOG_SND_RPC
     ALOGD("rpc_snd_set_volume(%d, %d, %d)\n", device, method, volume);
 #endif
 
@@ -1113,7 +1103,7 @@ status_t AudioHardware::setVoiceVolume(float v)
         v = 1.0;
     }
 
-    int vol = lrint(v * 7.0);
+    int vol = lrint(v * 5.0);
     ALOGD("setVoiceVolume(%f)\n", v);
     ALOGI("Setting in-call volume to %d (available range is 0 to 7)\n", vol);
 
@@ -1131,7 +1121,7 @@ status_t AudioHardware::setVoiceVolume(float v)
 status_t AudioHardware::setMasterVolume(float v)
 {
     android::Mutex::Autolock lock(mLock);
-    int vol = ceil(v * 7.0);
+    int vol = ceil(v * 1.0);
     ALOGI("Set master volume to %d.\n", vol);
     set_volume_rpc(SND_DEVICE_HANDSET, SND_METHOD_VOICE, vol, m7xsnddriverfd);
     set_volume_rpc(SND_DEVICE_SPEAKER, SND_METHOD_VOICE, vol, m7xsnddriverfd);
@@ -1145,37 +1135,13 @@ status_t AudioHardware::setMasterVolume(float v)
     return -1;
 }
 
-#ifdef HAVE_FM_RADIO
-status_t AudioHardware::setFmOnOff(int onoff)
-{
-    int ret;
-
-    if (onoff) {
-	if(fmfd < 0)
-	    fmfd = open("/dev/si4708", O_RDWR);
-        mFmRadioEnabled = true;
-	ALOGV("mFmVolume=%i",mFmVolume);
-	if (ioctl(fmfd, Si4708_IOC_SET_VOL, &mFmVolume) < 0) {
-	    ALOGE("set_volume_fm error.");
-            return -EIO;
-        }
-    } else {
-        close(fmfd);
-        fmfd = -1;
-        mFmRadioEnabled = false;
-    }
-    ALOGV("mFmRadioEnabled=%d", mFmRadioEnabled);
-    return doRouting(NULL);
-}
-#endif
-
 static status_t do_route_audio_rpc(uint32_t device,
                                    bool ear_mute, bool mic_mute, int m7xsnddriverfd)
 {
     if (device == -1UL)
         return NO_ERROR;
 
-#if ALOG_SND_RPC
+#if LOG_SND_RPC
     ALOGD("rpc_snd_set_device(%d, %d, %d)\n", device, ear_mute, mic_mute);
 #endif
 
@@ -1237,14 +1203,6 @@ status_t AudioHardware::doAudioRouteOrMute(uint32_t device)
         /* enable routing to earpiece (unmute) if mic is selected as input */
         mute = !mBuiltinMicSelected;
     }
-
-    mFmPrev=mFmRadioEnabled;
-#ifdef HAVE_FM_RADIO
-    if(mFmRadioEnabled && (device == SND_DEVICE_HEADSET)) {
-      mute = 0;
-      ALOGI("unmute for radio");
-    }
-#endif
 
     ALOGD("doAudioRouteOrMute() device %x, mMode %d, mMicMute %d, mBuiltinMicSelected %d, %s",
         device, mMode, mMicMute, mBuiltinMicSelected, mute ? "muted" : "audio circuit active");
@@ -1335,7 +1293,8 @@ status_t AudioHardware::doRouting(AudioStreamInMSM72xx *input)
                 new_post_proc_feature_mask = (ADRC_ENABLE | EQ_ENABLE | RX_IIR_ENABLE | MBADRC_ENABLE);
             } else {
                 ALOGI("Routing audio to No microphone Wired Headset (%d,%x)\n", mMode, outputDevices);
-                new_snd_device = SND_DEVICE_NO_MIC_HEADSET;
+                new_snd_device = SND_DEVICE_HEADSET;
+                new_post_proc_feature_mask = (ADRC_ENABLE | EQ_ENABLE | RX_IIR_ENABLE | MBADRC_ENABLE);
             }
 #endif
         } else if (outputDevices & AudioSystem::DEVICE_OUT_WIRED_HEADSET) {
@@ -1363,7 +1322,7 @@ status_t AudioHardware::doRouting(AudioStreamInMSM72xx *input)
         }
     }
 
-    if ((new_snd_device != -1 && new_snd_device != mCurSndDevice) || mFmRadioEnabled != mFmPrev) {
+    if (new_snd_device != -1 && new_snd_device != mCurSndDevice) {
         ret = doAudioRouteOrMute(new_snd_device);
 
        //disable post proc first for previous session
@@ -1629,8 +1588,8 @@ bool AudioHardware::AudioStreamOutMSM72xx::checkStandby()
 
 status_t AudioHardware::AudioStreamOutMSM72xx::setParameters(const String8& keyValuePairs)
 {
-    android::AudioParameter param = android::AudioParameter(keyValuePairs);
-    String8 key = String8(android::AudioParameter::keyRouting);
+    AudioParameter param = AudioParameter(keyValuePairs);
+    String8 key = String8(AudioParameter::keyRouting);
     status_t status = NO_ERROR;
     int device;
     ALOGV("AudioStreamOutMSM72xx::setParameters() %s", keyValuePairs.string());
@@ -1638,7 +1597,7 @@ status_t AudioHardware::AudioStreamOutMSM72xx::setParameters(const String8& keyV
     if (param.getInt(key, device) == NO_ERROR) {
         mDevices = device;
         ALOGV("set output routing %x", mDevices);
-	status = mHardware->setParameters(keyValuePairs);
+        status = mHardware->setParameters(keyValuePairs);
         status = mHardware->doRouting(NULL);
         param.remove(key);
     }
@@ -1651,9 +1610,9 @@ status_t AudioHardware::AudioStreamOutMSM72xx::setParameters(const String8& keyV
 
 String8 AudioHardware::AudioStreamOutMSM72xx::getParameters(const String8& keys)
 {
-    android::AudioParameter param = android::AudioParameter(keys);
+    AudioParameter param = AudioParameter(keys);
     String8 value;
-    String8 key = String8(android::AudioParameter::keyRouting);
+    String8 key = String8(AudioParameter::keyRouting);
 
     if (param.get(key, value) == NO_ERROR) {
         ALOGV("get routing %x", mDevices);
@@ -1702,11 +1661,13 @@ status_t AudioHardware::AudioStreamInMSM72xx::set(
         return BAD_VALUE;
     }
 
-    if (pChannels == 0 || (*pChannels & (AudioSystem::CHANNEL_IN_MONO | AudioSystem::CHANNEL_IN_STEREO)) == 0)
+    /*if (pChannels == 0 || (*pChannels & (AudioSystem::CHANNEL_IN_MONO | AudioSystem::CHANNEL_IN_STEREO)) == 0)
     {
         *pChannels = AUDIO_HW_IN_CHANNELS;
         return BAD_VALUE;
-    }
+    }*/
+	
+	*pChannels = AUDIO_HW_IN_CHANNELS;
 
     mHardware = hw;
 
@@ -2131,8 +2092,8 @@ status_t AudioHardware::AudioStreamInMSM72xx::dump(int fd, const Vector<String16
 
 status_t AudioHardware::AudioStreamInMSM72xx::setParameters(const String8& keyValuePairs)
 {
-    android::AudioParameter param = android::AudioParameter(keyValuePairs);
-    String8 key = String8(android::AudioParameter::keyRouting);
+    AudioParameter param = AudioParameter(keyValuePairs);
+    String8 key = String8(AudioParameter::keyRouting);
     status_t status = NO_ERROR;
     int device;
     ALOGV("AudioStreamInMSM72xx::setParameters() %s", keyValuePairs.string());
@@ -2154,26 +2115,11 @@ status_t AudioHardware::AudioStreamInMSM72xx::setParameters(const String8& keyVa
     return status;
 }
 
-#ifdef HAVE_FM_RADIO
-
-status_t AudioHardware::setFmVolume(float v)
-{
-    mFmVolume = (AudioSystem::logToLinear(v) +5) / 7;
-    if(mFmRadioEnabled) {
-	if (ioctl(fmfd, Si4708_IOC_SET_VOL, &mFmVolume) < 0) {
-	    ALOGE("set_volume_fm error.");
-            return -EIO;
-        }
-    }
-    return NO_ERROR;
-}
-#endif
-
 String8 AudioHardware::AudioStreamInMSM72xx::getParameters(const String8& keys)
 {
-    android::AudioParameter param = android::AudioParameter(keys);
+    AudioParameter param = AudioParameter(keys);
     String8 value;
-    String8 key = String8(android::AudioParameter::keyRouting);
+    String8 key = String8(AudioParameter::keyRouting);
 
     if (param.get(key, value) == NO_ERROR) {
         ALOGV("get routing %x", mDevices);
@@ -2190,4 +2136,4 @@ extern "C" AudioHardwareInterface* createAudioHardware(void) {
     return new AudioHardware();
 }
 
-}; // namespace android_audio_legacy
+}; // namespace android
