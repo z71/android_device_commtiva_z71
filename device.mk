@@ -22,31 +22,25 @@ PRODUCT_AAPT_PREF_CONFIG := mdpi
 
 # Display
 PRODUCT_PACKAGES += \
-    gralloc.default \
     gralloc.msm7x27 \
-    hwcomposer.default \
     hwcomposer.msm7x27 \
     copybit.msm7x27 \
-    libtilerenderer \
-    libqdutils \
-    liboverlay
+    libgenlock \
+    liboverlay \
+    libtilerenderer 
         
 # OMX
 PRODUCT_PACKAGES += \
-    libmm-omxcore \
-    libdivxdrmdecrypt \
     libOmxCore \
-    libOmxVdec \
-    libOmxVenc \
-    libstagefrighthw \
-    libopencorehw 
+    libmm-omxcore \
+    libstagefrighthw
 
 # Camera
 PRODUCT_PACKAGES += \
         libcamera \
         LegacyCamera \
-        camera.msm7x27
-
+        camera.z71
+        
 # GPS
 PRODUCT_PACKAGES += \
         gps.z71 \
@@ -59,6 +53,8 @@ PRODUCT_PACKAGES += \
 
 # Audio
 PRODUCT_PACKAGES += \
+        audio.primary.z71 \
+        audio_policy.z71 \
         audio.a2dp.default \
         libaudioutils
 
@@ -126,6 +122,11 @@ PRODUCT_COPY_FILES += \
     device/commtiva/z71/prebuilt/bi8232-touch.idc:system/usr/idc/bi8232-touch.idc \
     device/commtiva/z71/prebuilt/7x27_kybd.kl:system/usr/keylayout/7x27_kybd.kl \
     device/commtiva/z71/prebuilt/bi8232-touch.kl:system/usr/keylayout/bi8232-touch.kl
+
+# Build.prop overrides
+PRODUCT_PROPERTY_OVERRIDES += \
+    hwui.render_dirty_regions=false \
+    pm.sleep_mode=1
 
 $(call inherit-product, $(SRC_TARGET_DIR)/product/languages_full.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base.mk)
