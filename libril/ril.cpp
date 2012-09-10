@@ -87,9 +87,9 @@ namespace android {
 #define PRINTBUF_SIZE 8096
 
 // Enable RILC log
-#define RILC_ALOG 0
+#define RILC_LOG 0
 
-#if RILC_ALOG
+#if RILC_LOG
     #define startRequest           sprintf(printBuf, "(")
     #define closeRequest           sprintf(printBuf, "%s)", printBuf)
     #define printRequest(token, req)           \
@@ -186,7 +186,7 @@ static UserCallbackInfo *s_last_wake_timeout_info = NULL;
 static void *s_lastNITZTimeData = NULL;
 static size_t s_lastNITZTimeDataSize;
 
-#if RILC_ALOG
+#if RILC_LOG
     static char printBuf[PRINTBUF_SIZE];
 #endif
 
@@ -490,7 +490,14 @@ dispatchInts (Parcel &p, RequestInfo *pRI) {
         int32_t t;
 
         status = p.readInt32(&t);
-        pInts[i] = (int)t;
+        /* libril-qc apparently only supports SERVICE_NONE here */
+        if (pRI->pCI->requestNumber == RIL_REQUEST_QUERY_CALL_WAITING)
+            pInts[i] = 0;
+        else if (pRI->pCI->requestNumber == RIL_REQUEST_SET_CALL_WAITING &&
+                    i == 1)
+            pInts[i] = 0;
+        else
+            pInts[i] = (int)t;
         appendPrintBuf("%s%d,", printBuf, t);
 
         if (status != NO_ERROR) {
@@ -1751,7 +1758,7 @@ static int responseCdmaInformationRecords(Parcel &p,
             case RIL_CDMA_REDIRECTING_NUMBER_INFO_REC:
                 if (infoRec->rec.redir.redirectingNumber.len >
                                               CDMA_NUMBER_INFO_BUFFER_LENGTH) {
-                    ALOGE("invalid display info response length %d \
+                   ALOGE("invalid display info response length %d \
                           expected not more than %d\n",
                          (int)infoRec->rec.redir.redirectingNumber.len,
                          CDMA_NUMBER_INFO_BUFFER_LENGTH);
@@ -1925,7 +1932,7 @@ static int responseCdmaSignalInfoRecord(Parcel &p, void *response, size_t respon
 static int responseCdmaCallWaiting(Parcel &p, void *response,
             size_t responselen) {
     if (response == NULL && responselen != 0) {
-        ALOGE("invalid response: NULL");
+       ALOGE("invalid response: NULL");
         return RIL_ERRNO_INVALID_RESPONSE;
     }
 
@@ -2556,7 +2563,7 @@ RIL_register (const RIL_RadioFunctions *callbacks) {
 
     if (callbacks == NULL || ((callbacks->version != RIL_VERSION)
                 && (callbacks->version != 2))) { // Remove when partners upgrade to version 3
-        ALOGE(
+       ALOGE(
             "RIL_register: RIL_RadioFunctions * null or invalid version"
             " (expected %d)", RIL_VERSION);
         return;
@@ -2650,6 +2657,7 @@ RIL_register (const RIL_RadioFunctions *callbacks) {
 
     rilEventAddWakeup (&s_debug_event);
 #endif
+
 }
 
 static int
@@ -2679,6 +2687,158 @@ checkAndDequeueRequestInfo(struct RequestInfo *pRI) {
     return ret;
 }
 
+/* Hacks to overcome the lack of operator names in libril-qc. This
+ * fetches them from the modem */
+
+char *getNextValueFromAtLine(char **atresponse) {
+	char *value = NULL;
+
+	char *readbuf = *atresponse;
+
+	while (*readbuf != '+' && *readbuf !='\0') {
+		readbuf++;
+	}
+	if (strlen(readbuf)) {
+		value = readbuf;
+		while (*value != '"' && strlen(value)) {
+			value++;
+		}
+		value+=1;
+		readbuf=value;
+		while (*readbuf != '"' && strlen(readbuf)) {
+			readbuf++;
+		}
+		*readbuf='\0';
+		readbuf++;
+	}
+
+	*atresponse = readbuf;
+	return value;
+}
+
+
+void getNetworksFromModem(char **response) {
+	struct termios  ios;
+	char sync_buf[256];
+	char *readbuf = sync_buf;
+	char *states[4] = {"unknown","available","current","forbidden"}; 
+	int seen[16] = {0,}; /* Max 16 operators */
+	int old_flags, i, networkCount=0;
+	int fd=open("/dev/smd0",O_RDWR);
+
+	if (fd<=0) {
+		return;
+	}
+	tcgetattr( fd, &ios );
+	ios.c_lflag = 0;
+	tcsetattr( fd, TCSANOW, &ios );
+	old_flags = fcntl(fd, F_GETFL, 0);
+    fcntl(fd, F_SETFL, old_flags | O_NONBLOCK);
+
+	write(fd,"AT+COPS=?\r",10);
+	sleep(1);	
+
+	if (read(fd,sync_buf,sizeof(sync_buf))) {
+		sync_buf[255]='\0';
+		char *readbuf = sync_buf;
+		while (strlen(readbuf)) {
+			char *output[4];
+			while (*readbuf != '(' && *readbuf !='\0') {
+				readbuf++;
+			}
+			output[0]=++readbuf;
+			while (*readbuf != ',') {
+				readbuf++;
+			}
+			*readbuf='\0'; readbuf+=2;
+			output[1]=readbuf;
+			while (*readbuf != ',') {
+				readbuf++;
+			}
+			*--readbuf='\0'; readbuf+=3;
+			output[2]=readbuf;
+			while (*readbuf != ',') {
+				readbuf++;
+			}
+			*--readbuf='\0'; readbuf+=3;
+			output[3]=readbuf;
+			while (*readbuf != ',') {
+				readbuf++;
+			}
+			*--readbuf='\0'; 
+			while (*readbuf != ')') {
+				readbuf++;
+			}
+			*readbuf++='\0';
+
+			int numericOperator = atoi(output[3]);
+			for (i=0; i<16 && seen[i]!=0; i++) {
+				if (seen[i] == numericOperator)
+					goto skipop;
+			}
+			seen[networkCount] = numericOperator;
+
+			response[(networkCount*4)+0]=strdup(output[1]);
+			response[(networkCount*4)+1]=strdup(output[2]);
+			response[(networkCount*4)+2]=strdup(output[3]);
+			response[(networkCount*4)+3]=strdup(states[atoi(output[0])]);
+		
+			networkCount++;
+skipop:	
+			if (!strncmp(readbuf,",,",2)) {
+				break;
+			}
+	
+		}
+	}
+	close(fd);
+}
+
+void getOperatorFromModem(char **p_cur) {
+    struct termios  ios;
+    char sync_buf[256];
+    char *readbuf = sync_buf;
+    char *plmn=NULL;
+    char *spn=NULL;
+	int fd=open("/dev/smd0",O_RDWR);
+    int old_flags;
+	int read_bytes=0;
+
+	if (fd<=0) {
+		return;
+	}
+    old_flags = fcntl(fd, F_GETFL, 0);
+	tcgetattr( fd, &ios );
+    ios.c_lflag = 0;
+    tcsetattr( fd, TCSANOW, &ios );
+
+	write(fd,"AT+COPS=3,0;+COPS?;+COPS=3,1;+COPS?\r",36);
+	sleep(1);
+    read_bytes = read(fd,sync_buf,sizeof(sync_buf));
+    if (read_bytes) {
+        /* Skip first echoed line */
+        while (read_bytes && *readbuf != '\n' && *readbuf !='\0') {
+            readbuf++;
+			read_bytes--;
+        }
+        /* Nothing left */
+        if (!read_bytes) { return; }
+        /* Find PLMN */
+        plmn = getNextValueFromAtLine(&readbuf);
+        /* Find SPN */
+        spn = getNextValueFromAtLine(&readbuf);
+
+		if (plmn != NULL && spn != NULL &&
+				strlen(plmn) && strlen(spn)) {
+			p_cur[0]=strdup(plmn);
+			p_cur[1]=strdup(spn);
+		}
+	}
+	close(fd);
+}
+
+/* End of libril-qc "helpers" */
+
 extern "C" void
 RIL_onRequestComplete(RIL_Token t, RIL_Errno e, void *response, size_t responselen) {
     RequestInfo *pRI;
@@ -2703,10 +2863,17 @@ RIL_onRequestComplete(RIL_Token t, RIL_Errno e, void *response, size_t responsel
     appendPrintBuf("[%04d]< %s",
         pRI->token, requestToString(pRI->pCI->requestNumber));
 
-    if (pRI->pCI->requestNumber == RIL_REQUEST_BASEBAND_VERSION) {
+    if (responselen && pRI->pCI->requestNumber == RIL_REQUEST_OPERATOR) {
+        char **p_cur = (char **) response;
+        if (!strncmp(p_cur[0],"Unknown",7)) {
+            getOperatorFromModem(p_cur);
+        }
+    } else if (responselen && pRI->pCI->requestNumber == RIL_REQUEST_QUERY_AVAILABLE_NETWORKS) {
+        getNetworksFromModem((char **)response);
+    } else if (pRI->pCI->requestNumber == RIL_REQUEST_BASEBAND_VERSION) {
         char baseband[PROPERTY_VALUE_MAX];
 
-        property_get("ro.build.baseband_version", baseband, "QCT unknown");
+        property_get("ro.baseband", baseband, "QCT unknown");
         response=strdup(baseband);
     }
 

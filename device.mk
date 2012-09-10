@@ -24,10 +24,7 @@ PRODUCT_AAPT_PREF_CONFIG := mdpi
 PRODUCT_PACKAGES += \
     gralloc.msm7x27 \
     hwcomposer.msm7x27 \
-    copybit.msm7x27 \
-    libgenlock \
-    liboverlay \
-    libtilerenderer 
+    copybit.msm7x27
         
 # OMX
 PRODUCT_PACKAGES += \
@@ -37,9 +34,8 @@ PRODUCT_PACKAGES += \
 
 # Camera
 PRODUCT_PACKAGES += \
-        libcamera \
         LegacyCamera \
-        camera.z71
+        camera.msm7x27
         
 # GPS
 PRODUCT_PACKAGES += \
@@ -61,7 +57,9 @@ PRODUCT_PACKAGES += \
 # Other
 PRODUCT_PACKAGES += \
         FileManager \
-        dexpreopt
+        dexpreopt \
+        setup_fs \
+        make_ext4fs
 
 # for bugmailer
 ifneq ($(TARGET_BUILD_VARIANT),user)
@@ -113,6 +111,9 @@ PRODUCT_COPY_FILES += \
     device/commtiva/z71/prebuilt/etc/ms3c_transformation.cfg:system/etc/ms3c_transformation.cfg \
     device/commtiva/z71/prebuilt/etc/AutoVolumeControl.txt:system/etc/AutoVolumeControl.txt \
     device/commtiva/z71/prebuilt/etc/AudioFilter.csv:system/etc/AudioFilter.csv \
+    device/commtiva/z71/prebuilt/etc/media_codecs.xml:system/etc/media_codecs.xml \
+    device/commtiva/z71/prebuilt/etc/gps.conf:system/etc/gps.conf \
+    device/commtiva/z71/prebuilt/etc/audio_policy.conf:system/etc/audio_policy.conf 
 
 PRODUCT_COPY_FILES += \
     device/commtiva/z71/prebuilt/etc/media_profiles.xml:system/etc/media_profiles.xml \
@@ -122,11 +123,6 @@ PRODUCT_COPY_FILES += \
     device/commtiva/z71/prebuilt/bi8232-touch.idc:system/usr/idc/bi8232-touch.idc \
     device/commtiva/z71/prebuilt/7x27_kybd.kl:system/usr/keylayout/7x27_kybd.kl \
     device/commtiva/z71/prebuilt/bi8232-touch.kl:system/usr/keylayout/bi8232-touch.kl
-
-# Build.prop overrides
-PRODUCT_PROPERTY_OVERRIDES += \
-    hwui.render_dirty_regions=false \
-    pm.sleep_mode=1
 
 $(call inherit-product, $(SRC_TARGET_DIR)/product/languages_full.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base.mk)

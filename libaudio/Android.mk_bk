@@ -1,4 +1,5 @@
 ifeq ($(TARGET_BOOTLOADER_BOARD_NAME),z71)
+
 LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
 
@@ -17,9 +18,9 @@ LOCAL_MODULE:= audio_policy.$(TARGET_DEVICE)
 LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
 
 
-ifeq ($(BOARD_HAVE_BLUETOOTH),true)
-  LOCAL_CFLAGS += -DWITH_A2DP
-endif
+#ifeq ($(BOARD_HAVE_BLUETOOTH),true)
+#  LOCAL_CFLAGS += -DWITH_A2DP
+#endif
 
 include $(BUILD_SHARED_LIBRARY)
 
@@ -49,9 +50,9 @@ endif
 LOCAL_SRC_FILES += AudioHardware.cpp
 LOCAL_CFLAGS += -fno-short-enums
 
-#ifeq ($(BOARD_HAVE_BLUETOOTH),true)
-#  LOCAL_SHARED_LIBRARIES += audio.a2dp.default libbinder
-#endif
+ifeq ($(BOARD_HAVE_BLUETOOTH),true)
+  LOCAL_SHARED_LIBRARIES += audio.a2dp.default libbinder
+endif
 
 include $(BUILD_SHARED_LIBRARY)
 endif
