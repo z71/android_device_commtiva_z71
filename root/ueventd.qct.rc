@@ -1,12 +1,9 @@
-/dev/oncrpc/*        0660   radio     radio
-/dev/msm_camera/*    0777   graphics  graphics
-/dev/bma020          0640   compass   system
-/dev/graphics/fb0    0777   graphics  graphics
-/dev/smdcntl0        0640   radio     radio
-/dev/smdcntl1        0640   radio     radio
-/dev/smdcntl2        0640   radio     radio
-/dev/msm_preproc_ctl 0660   system    audio
-/dev/genlock         0666   graphics  graphics
-/dev/kgsl-3d0        0666   graphics  graphics
-
+/dev/oncrpc/*             0660   radio       system
+/dev/msm_camera/*          0660   system       system
+/dev/bma020               0640   compass    system
+/dev/smdcntl0               0640   radio    radio
+/dev/smdcntl1               0640   radio    radio
+/dev/smdcntl2               0640   radio    radio
+/dev/kgsl-3d0               0666   root       root
+/dev/msm_preproc_ctl        0660   system   audio
 
