@@ -19,7 +19,7 @@ You should also use a local manifest to fetch the device's dependencies, so put 
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest>
   <project name="z71/android_device_commtiva_z71" path="device/commtiva/z71" />
-  <project name="z71/android_device_commtiva_z71" path="kernel/commtiva/z71" />
+  <project name="z71/android_kernel_commtiva_z71" path="kernel/commtiva/z71" />
   <project name="z71/proprietary_vendor_commtiva" path="vendor/commtiva" />
 </manifest>
 ```
