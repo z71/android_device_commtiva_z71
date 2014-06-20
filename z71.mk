@@ -73,7 +73,7 @@ PRODUCT_COPY_FILES += \
     device/commtiva/z71/rootdir/system/etc/firmware/data.patch.hw2_0.bin:system/etc/firmware/data.patch.hw2_0.bin \
     device/commtiva/z71/rootdir/system/etc/firmware/eeprom.bin:system/etc/firmware/eeprom.bin \
     device/commtiva/z71/rootdir/system/etc/firmware/athwlan.bin.z77:system/etc/firmware/athwlan.bin.z77 \
-    device/commtiva/z71/rootdir/system/etc/wifi/hostapd.conf:system/etc/wifi/hostapd.conf \
+    device/commtiva/z71/rootdir/system/etc/wifi/hostapd.conf:system/etc/wifi/hostapd.conf
 
 ## Other libraries and proprietary binaries
 PRODUCT_COPY_FILES += \
@@ -82,7 +82,7 @@ PRODUCT_COPY_FILES += \
     device/commtiva/z71/rootdir/system/etc/ms3c_transformation.cfg:system/etc/ms3c_transformation.cfg \
     device/commtiva/z71/rootdir/system/app/SensorCalibration.apk:system/app/SensorCalibration.apk \
     device/commtiva/z71/rootdir/system/etc/AutoVolumeControl.txt:system/etc/AutoVolumeControl.txt \
-    device/commtiva/z71/rootdir/system/etc/AudioFilter.csv:system/etc/AudioFilter.csv \
+    device/commtiva/z71/rootdir/system/etc/AudioFilter.csv:system/etc/AudioFilter.csv
 
 
 PRODUCT_COPY_FILES += \
