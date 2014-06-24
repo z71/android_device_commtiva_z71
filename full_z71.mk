@@ -21,14 +21,16 @@
 # lines, full and toro, hence its name.
 #
 
-# Inherit from those products. Most specific first.
-$(call inherit-product, $(SRC_TARGET_DIR)/product/full_base.mk)
-$(call inherit-product, $(SRC_TARGET_DIR)/product/telephony.mk)
-# Inherit from blade device
+# Most specific first.
+$(call inherit-product, $(SRC_TARGET_DIR)/product/full_base_telephony.mk)
+
+# Inherit z71 device
 $(call inherit-product, device/commtiva/z71/device.mk)
 
-# Set those variables here to overwrite the inherited values.
-PRODUCT_NAME := cm_z71
+# Device identifier
+PRODUCT_NAME := full_z71
 PRODUCT_DEVICE := z71
-PRODUCT_BRAND := Commtiva
-PRODUCT_MODEL := Commtiva z71
+PRODUCT_BRAND := commtiva
+PRODUCT_MANUFACTURER := Foxconn
+PRODUCT_MODEL := Commtiva Z71
+PRODUCT_CHARACTERISTICS := phone

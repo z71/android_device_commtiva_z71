@@ -1,2 +1,2 @@
 PRODUCT_MAKEFILES := \
-    $(LOCAL_DIR)/z71.mk
+    $(LOCAL_DIR)/full_z71.mk

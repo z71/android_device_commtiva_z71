@@ -15,6 +15,11 @@
 
 # The gps config appropriate for this device
 $(call inherit-product, device/common/gps/gps_eu_supl.mk)
+
+# Z71 vendor
+$(call inherit-product-if-exists, vendor/commtiva/z71/z71-vendor.mk)
+
+# Device-specific overlay
 DEVICE_PACKAGE_OVERLAYS += device/commtiva/z71/overlay
 
 PRODUCT_AAPT_CONFIG := normal mdpi
@@ -25,7 +30,7 @@ PRODUCT_PACKAGES += \
     gralloc.msm7x27 \
     hwcomposer.msm7x27 \
     copybit.msm7x27
-        
+   
 # OMX
 PRODUCT_PACKAGES += \
     libOmxCore \
@@ -34,43 +39,31 @@ PRODUCT_PACKAGES += \
 
 # Camera
 PRODUCT_PACKAGES += \
-        LegacyCamera \
-        camera.msm7x27
-        
+    LegacyCamera \
+    camera.msm7x27
+   
 # GPS
 PRODUCT_PACKAGES += \
-        gps.z71 \
-        librpc 
-        
+    gps.z71 \
+    librpc 
+    
 # Z71 specific
 PRODUCT_PACKAGES += \
-        lights.z71 \
-        sensors.z71 
+    lights.z71 \
+    sensors.z71 
 
 # Audio
 PRODUCT_PACKAGES += \
-        audio.primary.z71 \
-        audio_policy.z71 \
-        audio.a2dp.default \
-        libaudioutils
+    audio.primary.z71 \
+    audio_policy.z71 \
+    audio.a2dp.default \
+    libaudioutils
 
 # Other
 PRODUCT_PACKAGES += \
-        FileManager \
         dexpreopt \
         setup_fs \
         make_ext4fs
-
-# for bugmailer
-ifneq ($(TARGET_BUILD_VARIANT),user)
-PRODUCT_PACKAGES += send_bug
-
-PRODUCT_COPY_FILES += \
-         system/extras/bugmailer/bugmailer.sh:system/bin/bugmailer.sh \
-         system/extras/bugmailer/send_bug:system/bin/send_bug
-endif
-
-DISABLE_DEXPREOPT := false
 
 PRODUCT_TAGS += dalvik.gc.type-precise
 
@@ -95,14 +88,14 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.touchscreen.multitouch.distinct.xml:system/etc/permissions/android.hardware.touchscreen.multitouch.distict.xml \
     frameworks/native/data/etc/android.hardware.camera.flash-autofocus.xml:system/etc/permissions/android.hardware.camera.flash-autofocus.xml \
     frameworks/native/data/etc/android.hardware.usb.accessory.xml:system/etc/permissions/android.hardware.usb.accessory.xml \
-    frameworks/native/data/etc/android.hardware.usb.host.xml:system/etc/permissions/android.hardware.usb.host.xml \
+    frameworks/native/data/etc/android.hardware.usb.host.xml:system/etc/permissions/android.hardware.usb.host.xml
 
 ##  AR6000 firmware
 PRODUCT_COPY_FILES += \
     device/commtiva/z71/prebuilt/etc/data.patch.hw2_0.bin:system/etc/firmware/data.patch.hw2_0.bin \
     device/commtiva/z71/prebuilt/etc/eeprom.bin:system/etc/firmware/eeprom.bin \
     device/commtiva/z71/prebuilt/etc/athwlan.bin.z77:system/etc/firmware/athwlan.bin.z77 \
-    device/commtiva/z71/prebuilt/etc/hostapd.conf:system/etc/wifi/hostapd.conf \
+    device/commtiva/z71/prebuilt/etc/hostapd.conf:system/etc/wifi/hostapd.conf
 
 ## Other libraries and proprietary binaries
 PRODUCT_COPY_FILES += \
@@ -123,7 +116,3 @@ PRODUCT_COPY_FILES += \
     device/commtiva/z71/prebuilt/bi8232-touch.idc:system/usr/idc/bi8232-touch.idc \
     device/commtiva/z71/prebuilt/7x27_kybd.kl:system/usr/keylayout/7x27_kybd.kl \
     device/commtiva/z71/prebuilt/bi8232-touch.kl:system/usr/keylayout/bi8232-touch.kl
-
-$(call inherit-product, $(SRC_TARGET_DIR)/product/languages_full.mk)
-$(call inherit-product, $(SRC_TARGET_DIR)/product/full_base.mk)
-$(call inherit-product-if-exists, vendor/commtiva/z71/z71-vendor.mk)

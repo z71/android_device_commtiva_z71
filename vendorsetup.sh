@@ -14,5 +14,7 @@
 # limitations under the License.
 #
 
-add_lunch_combo cm_z71-eng
-add_lunch_combo cm_z71-userdebug
+for i in eng userdebug user; do
+    add_lunch_combo cm_z71-${i}
+    add_lunch_combo full_z71-${i}
+done
